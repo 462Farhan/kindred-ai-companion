@@ -96,7 +96,7 @@ export function AppShell({
   actions?: ReactNode;
   children: ReactNode;
 }) {
-  const { theme, toggleTheme, role, setRole } = useAppState();
+  const { theme, toggleTheme, role, setRole, profile } = useAppState();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
@@ -110,7 +110,7 @@ export function AppShell({
         </div>
         <div className="m-3 rounded-xl border bg-card p-3 text-xs text-muted-foreground">
           <p className="font-medium text-foreground">Anonymous mode on</p>
-          <p className="mt-1">You appear as @user-8812 in every conversation.</p>
+          <p className="mt-1">You appear as @{profile.handle} in every conversation.</p>
         </div>
       </aside>
 
@@ -184,7 +184,9 @@ export function AppShell({
               </Button>
               <Link to="/profile" aria-label="Open profile">
                 <Avatar className="size-9 border">
-                  <AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary">U8</AvatarFallback>
+                  <AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary">
+                    {profile.handle.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
                 </Avatar>
               </Link>
             </div>

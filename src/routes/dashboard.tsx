@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { conversations, resources, weeklyMood } from "@/lib/mock-data";
+import { useAppState } from "@/lib/app-state";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -44,9 +45,11 @@ const aiRecommendations = [
 ];
 
 function DashboardPage() {
+  const { profile } = useAppState();
+
   return (
     <AppShell
-      title="Welcome back, @user-8812"
+      title={`Welcome back, @${profile.handle}`}
       description="Here's a calm snapshot of your week. Nothing here is shared without your say-so."
       actions={
         <>

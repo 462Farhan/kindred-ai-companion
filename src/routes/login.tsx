@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useAppState, sendWelcomeEmail } from "@/lib/app-state";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -28,6 +29,7 @@ const schema = z.object({
 
 function LoginPage() {
   const navigate = useNavigate();
+  const { profile, setIsLoggedIn } = useAppState();
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
     defaultValues: { email: "", password: "" },
@@ -49,8 +51,20 @@ function LoginPage() {
       <form
         noValidate
         className="space-y-5"
-        onSubmit={form.handleSubmit(() => {
-          toast.success("Signed in", { description: "Demo mode — no real account was used." });
+        onSubmit={form.handleSubmit((data) => {
+          setIsLoggedIn(true);
+
+          // Send welcome email on first login (if not already sent)
+          const emailSent = sendWelcomeEmail(data.email, profile.handle);
+
+          if (emailSent) {
+            toast.success("Signed in", {
+              description: `Welcome email sent to ${data.email}. Check your inbox for getting-started tips!`,
+            });
+          } else {
+            toast.success("Signed in", { description: `Welcome back, @${profile.handle}!` });
+          }
+
           navigate({ to: "/dashboard" });
         })}
       >

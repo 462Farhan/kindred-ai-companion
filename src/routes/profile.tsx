@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Camera, Star } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
@@ -13,6 +14,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { sessionHistory } from "@/lib/mock-data";
+import { useAppState } from "@/lib/app-state";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -34,6 +36,35 @@ const privacyToggles = [
 ];
 
 function ProfilePage() {
+  const { profile, updateProfile } = useAppState();
+
+  // Local form state initialized from global profile
+  const [handle, setHandle] = useState(profile.handle);
+  const [email, setEmail] = useState(profile.email);
+  const [pronouns, setPronouns] = useState(profile.pronouns);
+  const [timezone, setTimezone] = useState(profile.timezone);
+  const [bio, setBio] = useState(profile.bio);
+
+  // Sync local state when profile changes externally
+  useEffect(() => {
+    setHandle(profile.handle);
+    setEmail(profile.email);
+    setPronouns(profile.pronouns);
+    setTimezone(profile.timezone);
+    setBio(profile.bio);
+  }, [profile]);
+
+  const handleSave = () => {
+    if (handle.trim().length < 3) {
+      toast.error("Handle must be at least 3 characters");
+      return;
+    }
+    updateProfile({ handle: handle.trim(), email, pronouns, timezone, bio });
+    toast.success("Profile saved", { description: "Your changes are now reflected everywhere." });
+  };
+
+  const initials = profile.handle.slice(0, 2).toUpperCase();
+
   return (
     <AppShell title="Profile" description="You control what's visible. The default is: almost nothing.">
       <div className="grid gap-5 lg:grid-cols-3">
@@ -44,7 +75,7 @@ function ProfilePage() {
           <CardContent className="space-y-4 text-center">
             <div className="relative mx-auto w-fit">
               <Avatar className="size-24 border">
-                <AvatarFallback className="bg-primary/10 text-xl font-semibold text-primary">U8</AvatarFallback>
+                <AvatarFallback className="bg-primary/10 text-xl font-semibold text-primary">{initials}</AvatarFallback>
               </Avatar>
               <Button
                 size="icon"
@@ -56,8 +87,8 @@ function ProfilePage() {
               </Button>
             </div>
             <div>
-              <p className="font-semibold">@user-8812</p>
-              <p className="text-sm text-muted-foreground">Member since Jan 2025</p>
+              <p className="font-semibold">@{profile.handle}</p>
+              <p className="text-sm text-muted-foreground">Member since {profile.memberSince}</p>
             </div>
             <div className="flex flex-wrap justify-center gap-2">
               <Badge variant="secondary">Anonymous</Badge>
@@ -74,26 +105,32 @@ function ProfilePage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="handle">Handle</Label>
-                <Input id="handle" defaultValue="user-8812" />
+                <Input id="handle" value={handle} onChange={(e) => setHandle(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="pronouns">Pronouns (optional)</Label>
-                <Input id="pronouns" placeholder="they/them" />
+                <Input id="pronouns" placeholder="they/them" value={pronouns} onChange={(e) => setPronouns(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email (private)</Label>
-                <Input id="email" type="email" defaultValue="member@example.com" />
+                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="timezone">Time zone</Label>
-                <Input id="timezone" defaultValue="Europe/Berlin" />
+                <Input id="timezone" value={timezone} onChange={(e) => setTimezone(e.target.value)} />
               </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="bio">What you'd like supporters to know</Label>
-              <Textarea id="bio" className="min-h-24" placeholder="Optional. Shared only at the start of a session." />
+              <Textarea
+                id="bio"
+                className="min-h-24"
+                placeholder="Optional. Shared only at the start of a session."
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+              />
             </div>
-            <Button onClick={() => toast.success("Profile saved")}>Save changes</Button>
+            <Button onClick={handleSave}>Save changes</Button>
           </CardContent>
         </Card>
       </div>

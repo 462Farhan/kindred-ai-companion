@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAppState, sendWelcomeEmail } from "@/lib/app-state";
 
 export const Route = createFileRoute("/signup")({
   head: () => ({
@@ -35,6 +36,7 @@ const schema = z
 
 function SignupPage() {
   const navigate = useNavigate();
+  const { updateProfile, setIsLoggedIn } = useAppState();
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
     defaultValues: { handle: "", email: "", role: "user", password: "", confirm: "", consent: false },
@@ -57,8 +59,24 @@ function SignupPage() {
       <form
         noValidate
         className="space-y-5"
-        onSubmit={form.handleSubmit(() => {
-          toast.success("Account created", { description: "Demo mode — welcome to your dashboard." });
+        onSubmit={form.handleSubmit((data) => {
+          // Save the profile with the new handle and email
+          updateProfile({
+            handle: data.handle,
+            email: data.email,
+            memberSince: new Date().toLocaleDateString("en-US", { month: "short", year: "numeric" }),
+          });
+          setIsLoggedIn(true);
+
+          // Send welcome email
+          const emailSent = sendWelcomeEmail(data.email, data.handle);
+
+          toast.success("Account created!", {
+            description: emailSent
+              ? `Welcome email sent to ${data.email}. Check your inbox for getting-started tips.`
+              : "Welcome back to your dashboard.",
+          });
+
           navigate({ to: "/dashboard" });
         })}
       >
